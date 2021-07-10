@@ -1,5 +1,5 @@
 import torch
-
+from datasets import get_data
 
 def train():
     train_loader, test_loader = get_data()

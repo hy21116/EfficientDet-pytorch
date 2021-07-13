@@ -1,10 +1,8 @@
-import torch
-from datasets import get_data
+from torch.utils.data import DataLoader
+from datasets import COCODataset, DefaultTrainTransform, DefaultTestTransform, collate_fn
 
-def train():
-    train_loader, test_loader = get_data()
-
-    # model
+def train(args):
+    # Model
     model = EfficientDet()
     model.initialize()
     model.cuda()
@@ -15,11 +13,19 @@ def train():
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, verbose=True)
 
     # Load Dataset
-    train_loader, test_loader = getData()
+    args.data_path = "C:\\Users\\hy211\\PycharmProjects\\datasets\\MSCOCO"
+    train_set = COCODataset(args.data_path, transform=DefaultTrainTransform(size=512))
+    test_set = COCODataset(args.data_path, transform=DefaultTestTransform(), mode='test')
 
-    for epoch in range(num_epochs):
+    train_loader = DataLoader(dataset=train_set, batch_size=args.batch_size, shuffle=True, drop_last=True,
+                              collate_fn=collate_fn, num_workers=args.num_workers)
+    test_loader = DataLoader(dataset=test_set, batch_size=args.batch_size, shuffle=False, drop_last=True,
+                             collate_fn=collate_fn, num_workers=args.num_workers)
+
+    # Start Training
+    for epoch in range(args.num_epochs):
         print('\n')
-        print('Starting epoch {} / {}'.format(epoch, num_epochs))
+        print('Starting epoch {} / {}'.format(epoch, args.num_epochs))
 
         # Training.
         yolo.train()

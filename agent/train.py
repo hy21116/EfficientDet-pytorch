@@ -13,7 +13,6 @@ def train(args):
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, verbose=True)
 
     # Load Dataset
-    args.data_path = "C:\\Users\\hy211\\PycharmProjects\\datasets\\MSCOCO"
     train_set = COCODataset(args.data_path, transform=DefaultTrainTransform(size=512))
     test_set = COCODataset(args.data_path, transform=DefaultTestTransform(), mode='test')
 

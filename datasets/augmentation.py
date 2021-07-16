@@ -74,9 +74,10 @@ class DefaultTrainTransform(object):
         return self.augment(sample)
 
 
-class DefaultTestTransform(object):
-    def __init__(self):
-        self.augment = transforms.ToTensor()
+class DefaultValidTransform(object):
+    def __init__(self, size, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
+        self.augment = transforms.Compose([Normalizer(mean=mean, std=std),
+                                           Resizer(size)])
 
     def __call__(self, sample):
         return self.augment(sample)

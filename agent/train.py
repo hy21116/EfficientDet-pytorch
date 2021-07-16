@@ -1,5 +1,5 @@
 from torch.utils.data import DataLoader
-from datasets import COCODataset, DefaultTrainTransform, DefaultTestTransform, collate_fn
+from datasets import COCODataset, DefaultTrainTransform, DefaultValidTransform, collate_fn
 
 def train(args):
     # Model
@@ -14,12 +14,12 @@ def train(args):
 
     # Load Dataset
     train_set = COCODataset(args.data_path, transform=DefaultTrainTransform(size=512))
-    test_set = COCODataset(args.data_path, transform=DefaultTestTransform(), mode='test')
+    val_set = COCODataset(args.data_path, transform=DefaultValidTransform(size=512))
 
     train_loader = DataLoader(dataset=train_set, batch_size=args.batch_size, shuffle=True, drop_last=True,
                               collate_fn=collate_fn, num_workers=args.num_workers)
-    test_loader = DataLoader(dataset=test_set, batch_size=args.batch_size, shuffle=False, drop_last=True,
-                             collate_fn=collate_fn, num_workers=args.num_workers)
+    val_loader = DataLoader(dataset=val_set, batch_size=args.batch_size, shuffle=False, drop_last=True,
+                            collate_fn=collate_fn, num_workers=args.num_workers)
 
     # Start Training
     for epoch in range(args.num_epochs):

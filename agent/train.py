@@ -31,9 +31,9 @@ def train(args):
         total_loss = 0.0
         total_batch = 0
 
-        for idx, (x, labels) in enumerate(train_loader):
-            x = x.to('cuda')
-            labels = labels.to('cuda')
+        for idx, sample in enumerate(train_loader):
+            x = sample['img'].to('cuda')
+            labels = sample['annot'].to('cuda')
 
             preds = yolo(x)
             loss = criterion(preds, labels)

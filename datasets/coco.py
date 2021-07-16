@@ -7,11 +7,12 @@ from torch.utils.data import Dataset, DataLoader
 
 
 class COCODataset(Dataset):
-    def __init__(self, root_dir, transform=None):
+    def __init__(self, root_dir, set_name='train2017', transform=None):
         self.root_dir = root_dir
+        self.set_name = set_name
         self.transform = transform
 
-        self.coco = COCO(os.path.join(self.root_dir, 'annotations', 'instances_train2017.json'))
+        self.coco = COCO(os.path.join(self.root_dir, 'annotations', 'instances_' + self.set_name + '.json'))
         self.image_ids = self.coco.getImgIds()
         self.load_classes()
 

@@ -13,8 +13,8 @@ def train(args):
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, verbose=True)
 
     # Load Dataset
-    train_set = COCODataset(args.data_path, transform=DefaultTrainTransform(size=512))
-    val_set = COCODataset(args.data_path, transform=DefaultValidTransform(size=512))
+    train_set = COCODataset(args.data_path, set_name='train2017', transform=DefaultTrainTransform(size=512))
+    val_set = COCODataset(args.data_path, set_name='val2017', transform=DefaultValidTransform(size=512))
 
     train_loader = DataLoader(dataset=train_set, batch_size=args.batch_size, shuffle=True, drop_last=True,
                               collate_fn=collate_fn, num_workers=args.num_workers)

@@ -3,6 +3,7 @@ import torch
 import math
 from efficientnet_pytorch import EfficientNet
 
+
 class ConvBlock(nn.Module):
     def __init__(self, num_channels):
         super(ConvBlock, self).__init__()
@@ -150,6 +151,7 @@ class Regressor_Head(nn.Module):
         return output.contiguous().view(output.shape[0], -1, 4)
         # contiguous : 새로운 메모리 공간에 데이터를 복사하여 주소값 연속성을 가변적으로 만들어줌
 
+
 class Classifier_Head(nn.Module):
     def __init__(self, in_channels, num_anchors, num_classes, num_layers):
         super(Classifier_Head, self).__init__()
@@ -197,3 +199,13 @@ class EfficientNet_Backbone(nn.Module):
                 feature_maps.append(x)
 
         return feature_maps[1:]
+
+
+# class EfficientDet(nn.Module):
+#    def __init__(self, num_anchor, num_classes, compound_coef):
+#        super(EfficientDet, self).__init__()
+#        self.backbone_net = EfficientNet_Backbone()
+#        self.bifpn = BiFPN_Neck()
+#        self.regressor = Regressor_Head()
+#        self.classifier = Classifier_Head()
+

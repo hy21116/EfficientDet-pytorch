@@ -2,9 +2,10 @@ import torch.nn as nn
 import torch
 import math
 from efficientnet_pytorch import EfficientNet
+from agent.loss import FocalLoss
+from utils.utils import Anchors
 
-
-class ConvBlock(nn.Module):
+class ConvBlock(nn.Module): # depthwise separable convolution
     def __init__(self, num_channels):
         super(ConvBlock, self).__init__()
         self.conv = nn.Sequential(
@@ -200,12 +201,68 @@ class EfficientNet_Backbone(nn.Module):
 
         return feature_maps[1:]
 
+class EfficientDet(nn.Module):
+    def __init__(self, num_anchors=9, num_classes=20, compound_coef=0):
+        super(EfficientDet, self).__init__()
+        self.compound_coef = compound_coef
 
-# class EfficientDet(nn.Module):
-#    def __init__(self, num_anchor, num_classes, compound_coef):
-#        super(EfficientDet, self).__init__()
-#        self.backbone_net = EfficientNet_Backbone()
-#        self.bifpn = BiFPN_Neck()
-#        self.regressor = Regressor_Head()
-#        self.classifier = Classifier_Head()
+        self.num_channels = [64, 88, 112, 160, 224, 288, 384, 384][self.compound_coef]
 
+        self.conv3 = nn.Conv2d(40, self.num_channels, kernel_size=1, stride=1, padding=0)
+        self.conv4 = nn.Conv2d(80, self.num_channels, kernel_size=1, stride=1, padding=0)
+        self.conv5 = nn.Conv2d(192, self.num_channels, kernel_size=1, stride=1, padding=0)
+        self.conv6 = nn.Conv2d(192, self.num_channels, kernel_size=3, stride=2, padding=1)
+        self.conv7 = nn.Sequential(nn.ReLU(),
+                                   nn.Conv2d(self.num_channels, self.num_channels, kernel_size=3, stride=2, padding=1))
+
+        self.bifpn = nn.Sequential(*[BiFPN_Neck(self.num_channels) for _ in range(min(2 + self.compound_coef, 8))])
+
+        self.num_classes = num_classes
+        self.regressor = Regressor_Head(in_channels=self.num_channels, num_anchors=num_anchors,
+                                   num_layers=3 + self.compound_coef // 3)
+        self.classifier = Classifier_Head(in_channels=self.num_channels, num_anchors=num_anchors, num_classes=num_classes,
+                                     num_layers=3 + self.compound_coef // 3)
+
+        self.anchors = Anchors()
+        self.focalLoss = FocalLoss()
+
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+                m.weight.data.normal_(0, math.sqrt(2. / n))
+            elif isinstance(m, nn.BatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
+
+        prior = 0.01
+
+        self.classifier.header.weight.data.fill_(0)
+        self.classifier.header.bias.data.fill_(-math.log((1.0 - prior) / prior))
+
+        self.regressor.header.weight.data.fill_(0)
+        self.regressor.header.bias.data.fill_(0)
+
+        self.backbone_net = EfficientNet_Backbone()
+
+    def freeze_bn(self):
+        for m in self.modules():
+            if isinstance(m, nn.BatchNorm2d):
+                m.eval()
+
+    def forward(self, inputs):
+        img_batch = inputs
+
+        c3, c4, c5 = self.backbone_net(img_batch)
+        p3 = self.conv3(c3)
+        p4 = self.conv4(c4)
+        p5 = self.conv5(c5)
+        p6 = self.conv6(c5)
+        p7 = self.conv7(p6)
+
+        features = [p3, p4, p5, p6, p7]
+        features = self.bifpn(features)
+
+        regression = torch.cat([self.regressor(feature) for feature in features], dim=1)
+        classification = torch.cat([self.classifier(feature) for feature in features], dim=1)
+        anchors = self.anchors(img_batch)
+        return features, regression, classification, anchors

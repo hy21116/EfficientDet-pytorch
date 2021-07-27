@@ -1,5 +1,8 @@
+import torch
 from torch.utils.data import DataLoader
 from datasets import COCODataset, DefaultTrainTransform, DefaultValidTransform, collate_fn
+from models import EfficientDet
+from loss import FocalLoss
 
 def train(args):
     # Model
@@ -9,7 +12,7 @@ def train(args):
 
     # Loss, Optimizer, LR scheduler
     criterion = FocalLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=lr, momentum=0.9, nestrov=True)
+    optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, verbose=True)
 
     # Load Dataset
@@ -40,7 +43,7 @@ def train(args):
             cls_loss = cls_loss.mean()
             reg_loss = reg_loss.mean()
             loss = cls_loss + reg_loss
-            
+
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()

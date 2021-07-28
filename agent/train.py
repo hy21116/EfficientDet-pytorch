@@ -27,7 +27,7 @@ def train(args):
         print('Starting epoch {} / {}'.format(epoch, args.num_epochs))
 
         # Training.
-        yolo.train()
+        model.train()
         total_loss = 0.0
         total_batch = 0
 
@@ -35,8 +35,12 @@ def train(args):
             x = sample['img'].to('cuda')
             labels = sample['annot'].to('cuda')
 
-            preds = yolo(x)
-            loss = criterion(preds, labels)
+            features, regression, classification, anchors = model(x)
+            cls_loss, reg_loss = criterion(classification, regression, anchors, labels)
+            cls_loss = cls_loss.mean()
+            reg_loss = reg_loss.mean()
+            loss = cls_loss + reg_loss
+            
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()

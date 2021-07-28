@@ -6,7 +6,7 @@ parser.add_argument('--train', action='store_true')
 parser.add_argument('--eval', action='store_true')
 ## Train arguments
 parser.add_argument('-c', '--compound_coef', type=int, default=0, help='coefficients of efficientdet')
-parser.add_argument('--dataset', type=str, default='coco', help='project file that contains parameters')
+parser.add_argument('--dataset', type=str, default='VOC', help='VOC or COCO')
 
 parser.add_argument('--num_workers', type=int, default=12, help='num_workers of dataloader')
 parser.add_argument('--batch_size', type=int, default=12, help='The number of images per batch among all devices')

@@ -1,4 +1,3 @@
-from coco import COCODataset
-from augmentation import DefaultTrainTransform, DefaultValidTransform
-from collate_fn import collate_fn
+from get_data import get_data
+
 
